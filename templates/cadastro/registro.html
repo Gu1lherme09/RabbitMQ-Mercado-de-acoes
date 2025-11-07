@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro</title>
+    <link rel="stylesheet" href="{% static 'css/cadastro/cadastro.css' %}">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="page">
+    <div class="auth-box">
+        <div class="tabs">
+            <a class="tab-btn tab-link" href="{% url 'login' %}">Login</a>
+            <button class="tab-btn active">Registro</button>
+        </div>
+
+        <form method="post" class="form show">
+            {% csrf_token %}
+
+            {# bloco bonito de erro #}
+            {% if form.non_field_errors or form.email.errors or form.password2.errors %}
+                <div class="error-msg">
+                    <i class='bx bx-error-circle'></i>
+                    {% if form.non_field_errors %}
+                        {{ form.non_field_errors.0 }}
+                    {% elif form.email.errors %}
+                        {{ form.email.errors.0 }}
+                    {% elif form.password2.errors %}
+                        {{ form.password2.errors.0 }}
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div class="field">
+                <label>E-mail</label>
+                {{ form.email }}
+            </div>
+
+            <div class="field">
+                <label>Telefone</label>
+                {{ form.telefone }}
+            </div>
+
+            <div class="field">
+                <label>Senha</label>
+                <div class="password-wrap">
+                    {{ form.password1 }}
+                    <button type="button" class="toggle-password" data-target="id_password1">
+                        <i class='bx bx-show eye-open'></i>
+                        <i class='bx bx-hide eye-closed' style="display:none;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Confirmar senha</label>
+                <div class="password-wrap">
+                    {{ form.password2 }}
+                    <button type="button" class="toggle-password" data-target="id_password2">
+                        <i class='bx bx-show eye-open'></i>
+                        <i class='bx bx-hide eye-closed' style="display:none;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="primary-btn">Registrar</button>
+        </form>
+    </div>
+</div>
+<script src="{% static 'js/cadastro/cadastro.js' %}"></script>
+</body>
+</html>

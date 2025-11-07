@@ -1,0 +1,20 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}BolsaView{% endblock %}</title>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+<body>
+
+  {% include 'partials/nav-bar.html' %}
+
+  <main class="page-content">
+      {% block content %}{% endblock %}
+  </main>
+
+  <script src="{% static 'js/home/usuario.js' %}"></script>
+</body>
+</html>

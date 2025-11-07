@@ -1,0 +1,92 @@
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #f9fafb;
+  color: #0f172a;
+}
+
+/* Navbar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+.logo i { color: #6366f1; font-size: 1.4rem; }
+
+/* Links principais */
+.navbar {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #0f172a;
+  font-size: .9rem;
+  font-weight: 500;
+  position: relative;
+  transition: color .2s;
+}
+
+.nav-link:hover {
+  color: #6366f1;
+}
+
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #6366f1;
+  border-radius: 2px;
+}
+
+/* Menu usuário */
+.user-menu { position: relative; display: inline-block; }
+.user-trigger {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #0f172a;
+}
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: 120%;
+  background: linear-gradient(135deg, #2f80ed, #b82dd9);
+  border-radius: 9999px 1rem 1rem 9999px;
+  padding: .4rem 1.3rem;
+  display: none;
+  box-shadow: 0 8px 20px rgba(0,0,0,.1);
+}
+.user-dropdown a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: .8rem;
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+.user-dropdown.show { display: block; }
+
+.page-content {
+  padding: 2rem;
+}

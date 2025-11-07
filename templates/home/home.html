@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Minhas Ações{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/home\home.css' %}">
+
+
+  <main class="layout">
+    <!-- gráfico -->
+    <section class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">
+          <h2>IBOVESPA</h2>
+          <p>149.540,43 <span class="up">+0,51%</span></p>
+        </div>
+        <div class="chips">
+          <button class="chip active">1D</button>
+          <button class="chip">5D</button>
+          <button class="chip">1M</button>
+          <button class="chip">1A</button>
+        </div>
+      </div>
+      <div class="chart-placeholder">
+        Gráfico (embed / img) aqui
+      </div>
+    </section>
+
+    <!-- índices -->
+    <aside class="indice-panel">
+      <h3>Minhas ações</h3>
+      <div class="indice-list">
+        <div class="indice-item">
+          <div class="indice-left">
+            <span class="badge">PETR4</span>
+            <span class="name">Petrobras PN</span>
+          </div>
+          <div>
+            <span class="price">R$ 37,80</span>
+            <span class="var up">+1,24%</span>
+          </div>
+        </div>
+        <div class="indice-item">
+          <div class="indice-left">
+            <span class="badge">VALE3</span>
+            <span class="name">Vale ON</span>
+          </div>
+          <div>
+            <span class="price">R$ 64,10</span>
+            <span class="var down">-0,56%</span>
+          </div>
+        </div>
+        <div class="indice-item">
+          <div class="indice-left">
+            <span class="badge">ITUB4</span>
+            <span class="name">Itaú Unibanco</span>
+          </div>
+          <div>
+            <span class="price">R$ 32,05</span>
+            <span class="var up">+0,34%</span>
+          </div>
+        </div>
+        <div class="indice-item">
+          <div class="indice-left">
+            <span class="badge">B3SA3</span>
+            <span class="name">B3</span>
+          </div>
+          <div>
+            <span class="price">R$ 11,27</span>
+            <span class="var up">+0,92%</span>
+          </div>
+        </div>
+        <p class="empty">…e assim por diante</p>
+      </div>
+    </aside>
+  </main>
+
+{% endblock %}

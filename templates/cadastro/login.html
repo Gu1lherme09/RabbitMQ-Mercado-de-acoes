@@ -1,0 +1,48 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'css/cadastro/cadastro.css' %}">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="page">
+    <div class="auth-box">
+        <div class="tabs">
+            <button class="tab-btn active">Login</button>
+            <a class="tab-btn tab-link" href="{% url 'registro' %}">Registro</a>
+        </div>
+
+        <form method="post" class="form show">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <p class="error-msg">{{ form.non_field_errors.0 }}</p>
+            {% endif %}
+
+            <div class="field">
+                <label>E-mail</label>
+                <div class="input-group">
+                    {{ form.email }}
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Senha</label>
+                <div class="password-wrap">
+                {{ form.password }}
+                <button type="button" class="toggle-password" data-target="id_password">
+                    <i class='bx bx-show eye-open'></i>
+                    <i class='bx bx-hide eye-closed' style="display:none;"></i>
+                </button>
+                </div>
+            </div>
+
+            <button type="submit" class="primary-btn">Entrar</button>
+        </form>
+    </div>
+</div>
+<script src="{% static 'js/cadastro/cadastro.js' %}"></script>
+</body>
+</html>

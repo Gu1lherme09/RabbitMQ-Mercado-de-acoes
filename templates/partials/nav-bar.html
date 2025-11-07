@@ -1,0 +1,26 @@
+<header class="topbar">
+  <div class="logo">
+      <i class='bx bx-line-chart'></i>
+      <span>BolsaView</span>
+  </div>
+
+  <nav class="navbar">
+      <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+          Home
+      </a>
+      <a href="{% url 'consultar' %}" class="nav-link {% if request.resolver_match.url_name == 'consultar' %}active{% endif %}">
+          Selecionar Ações
+      </a>
+  </nav>
+
+  <div class="user-menu" id="user-menu">
+      <button type="button" class="user-trigger" id="user-trigger">
+          <i class='bx bx-user'></i>
+          <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+          <i class='bx bx-chevron-down chevron'></i>
+      </button>
+      <div class="user-dropdown" id="user-dropdown">
+          <a href="{% url 'logout' %}"><i class='bx bx-exit'></i> Sair</a>
+      </div>
+  </div>
+</header>

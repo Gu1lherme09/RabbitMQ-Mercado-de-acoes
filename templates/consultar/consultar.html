@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Selecionar Ações{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/consulta/selecionar_acoes.css' %}">
+
+<section class="acoes-container">
+  <div class="acoes-header">
+    <h1>Todas as Ações</h1>
+<div class="acoes-filtros">
+  <form method="get" class="filtros-form">
+    <select name="mercado">
+      <option value="BR">Mercado: BR 🇧🇷</option>
+      <option value="US">Mercado: US 🇺🇸</option>
+    </select>
+
+    <select name="setor">
+      <option value="">Setor</option>
+      {% for setor in setores %}
+        <option value="{{ setor }}">{{ setor }}</option>
+      {% endfor %}
+    </select>
+
+    <input type="text" name="busca" placeholder="Buscar ação..." value="{{ request.GET.busca }}">
+    <button type="submit" class="btn-filtro">Filtrar</button>
+  </form>
+</div>
+  <div class="acoes-tabela">
+    <table>
+      <thead>
+        <tr>
+          <th>Símbolo</th>
+          <th>Nome</th>
+          <th>Preço</th>
+          <th>Variação</th>
+          <th>Volume</th>
+          <th>Valor Mercado</th>
+          <th>Setor</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for acao in acoes %}
+        <tr>
+          <td class="symbol">{{ acao.abreviacao }}</td>
+          <td>{{ acao.nome }}</td>
+          <td>R$ {{ acao.valor_atual|floatformat:2 }}</td>
+          {% if acao.percentual_mudanca >= 0 %}
+            <td class="up">+{{ acao.percentual_mudanca|floatformat:2 }}%</td>
+          {% else %}
+            <td class="down">{{ acao.percentual_mudanca|floatformat:2 }}%</td>
+          {% endif %}
+          <td>{{ acao.volume|floatformat:0 }}</td>
+          <td>{{ acao.market_cap|floatformat:2 }}</td>
+          <td>{{ acao.setor|default:"—" }}</td>
+          <td>
+            <form method="post" action="">
+              {% csrf_token %}
+              <button type="submit" class="btn-add">+</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="no-data">Nenhuma ação encontrada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
