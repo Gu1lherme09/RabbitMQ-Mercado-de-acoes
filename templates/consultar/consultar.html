@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static humanize %}
 {% block title %}Selecionar Ações{% endblock %}
 
 {% block content %}
@@ -8,24 +8,27 @@
 <section class="acoes-container">
   <div class="acoes-header">
     <h1>Todas as Ações</h1>
-<div class="acoes-filtros">
-  <form method="get" class="filtros-form">
-    <select name="mercado">
-      <option value="BR">Mercado: BR 🇧🇷</option>
-      <option value="US">Mercado: US 🇺🇸</option>
-    </select>
 
-    <select name="setor">
-      <option value="">Setor</option>
-      {% for setor in setores %}
-        <option value="{{ setor }}">{{ setor }}</option>
-      {% endfor %}
-    </select>
-
-    <input type="text" name="busca" placeholder="Buscar ação..." value="{{ request.GET.busca }}">
-    <button type="submit" class="btn-filtro">Filtrar</button>
-  </form>
-</div>
+    <div class="acoes-filtros">
+      <input 
+        type="text" 
+        id="buscaAcao" 
+        placeholder="Buscar ação por nome ou setor..." 
+        class="input-busca"
+      >
+      <div class="nova-acao-wrapper">
+        <input 
+          type="text" 
+          id="novaAcaoTicker" 
+          placeholder="Adicionar nova ação..." 
+          class="input-busca"
+        >
+        <button type="button" id="btnAdicionarAcao" class="btn-add-acao">
+          <i class='bx bx-plus'></i> Adicionar
+        </button>
+      </div>
+    </div>
+  </div>
   <div class="acoes-tabela">
     <table>
       <thead>
@@ -40,9 +43,12 @@
           <th></th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="tabelaAcoes">
         {% for acao in acoes %}
-        <tr>
+        <tr 
+          data-nome="{{ acao.nome|lower }}" 
+          data-setor="{{ acao.setor|default:'-'|lower }}"
+        >
           <td class="symbol">{{ acao.abreviacao }}</td>
           <td>{{ acao.nome }}</td>
           <td>R$ {{ acao.valor_atual|floatformat:2 }}</td>
@@ -51,21 +57,117 @@
           {% else %}
             <td class="down">{{ acao.percentual_mudanca|floatformat:2 }}%</td>
           {% endif %}
-          <td>{{ acao.volume|floatformat:0 }}</td>
-          <td>{{ acao.market_cap|floatformat:2 }}</td>
+          <td>{{ acao.volume|floatformat:0|intcomma }}</td>
+          <td>R$ {{ acao.market_cap|floatformat:2|intcomma }}</td>
           <td>{{ acao.setor|default:"—" }}</td>
           <td>
-            <form method="post" action="">
-              {% csrf_token %}
-              <button type="submit" class="btn-add">+</button>
-            </form>
+            <button 
+              type="button" 
+              class="btn-add" 
+              data-acao-id="{{ acao.id }}" 
+              data-simbolo="{{ acao.abreviacao }}"
+              data-nome="{{ acao.nome }}">
+              +
+            </button>
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="8" class="no-data">Nenhuma ação encontrada.</td></tr>
+        <tr><td colspan="8" class="no-data">Nenhuma ação cadastrada.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </section>
+
+<div id="monitoramentoModal" class="modal hidden">
+  <div class="modal-content">
+    <h2>Adicionar Monitoramento</h2>
+    <form id="formMonitoramento" method="post" action="{% url 'criar_monitoramento' %}">
+      {% csrf_token %}
+      <input type="hidden" name="acao_id" id="modal_acao_id">
+      
+      <p><strong id="modal_acao_nome"></strong> (<span id="modal_acao_simbolo"></span>)</p>
+
+      <label>Preço Alvo:</label>
+      <input type="number" name="preco_alvo" step="0.01" required>
+
+      <label>Direção:</label>
+      <select name="direcao" required>
+        <option value="acima">Acima</option>
+        <option value="acima_ou_igual">Acima ou Igual</option>
+        <option value="abaixo">Abaixo</option>
+        <option value="abaixo_ou_igual">Abaixo ou Igual</option>
+      </select>
+
+      <div class="modal-buttons">
+        <button type="submit" class="btn-save">Salvar</button>
+        <button type="button" id="btnCancelar" class="btn-cancel">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="{% static 'js/utils/modalMonitoramento.js' %}"></script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const inputBusca = document.getElementById("buscaAcao");
+  const linhas = document.querySelectorAll("#tabelaAcoes tr");
+
+
+  inputBusca.addEventListener("input", () => {
+    const termo = inputBusca.value.toLowerCase().trim();
+    linhas.forEach(linha => {
+      const nome = linha.dataset.nome || "";
+      const setor = linha.dataset.setor || "";
+      linha.style.display = nome.includes(termo) || setor.includes(termo) ? "" : "none";
+    });
+  });
+
+
+  const btnAdd = document.getElementById("btnAdicionarAcao");
+  const inputTicker = document.getElementById("novaAcaoTicker");
+
+  btnAdd.addEventListener("click", async () => {
+    const ticker = inputTicker.value.trim().toUpperCase();
+    if (!ticker) return alert("Digite o ticker da ação (ex: PETR4, MGLU3, VALE3...).");
+
+    btnAdd.disabled = true;
+    btnAdd.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Adicionando...";
+
+    try {
+      const formData = new FormData();
+      formData.append("busca", ticker);
+
+      const resp = await fetch("/ajax/adicionar-acao-completa/", {
+        method: "POST",
+        headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+        body: formData
+      });
+
+      const data = await resp.json();
+      btnAdd.disabled = false;
+      btnAdd.innerHTML = "<i class='bx bx-plus'></i> Adicionar";
+
+      if (data.ok) {
+        alert("✅ " + data.msg);
+        // Abre o modal de monitoramento
+        document.getElementById("modal_acao_nome").textContent = data.nome;
+        document.getElementById("modal_acao_simbolo").textContent = data.ticker;
+        document.getElementById("modal_acao_id").value = data.acao_id;
+        document.getElementById("monitoramentoModal").classList.remove("hidden");
+      } else {
+        alert("⚠️ " + (data.erro || "Erro ao adicionar ação."));
+      }
+    } catch (err) {
+      console.error(err);
+      btnAdd.disabled = false;
+      btnAdd.innerHTML = "<i class='bx bx-plus'></i> Adicionar";
+      alert("❌ Erro de conexão com o servidor.");
+    }
+  });
+});
+</script>
+
 {% endblock %}

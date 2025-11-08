@@ -3,76 +3,258 @@
 {% block title %}Minhas Ações{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'css/home\home.css' %}">
+<link rel="stylesheet" href="{% static 'css/home/home.css' %}">
 
+<main class="layout">
+  <section class="chart-card">
+    <div class="chart-header">
+      <div class="chart-title">
+        <h2>Todas as ações</h2>
+        <p><span class="up"></span></p>
+      </div>
+      <div class="chart-filtros">
+        <label for="selectPeriodo" style="font-size:0.9rem; color:#333;">Período:</label>
+        <select id="selectPeriodo" style="margin-left:0.4rem; padding:0.3rem; border-radius:6px;">
+          <option value="1w">1 Semana</option>
+          <option value="1mo" selected>1 Mês</option>
+          <option value="3mo">3 Meses</option>
+          <option value="6mo">6 Meses</option>
+          <option value="1y">1 Ano</option>
+        </select>
+      </div>
+    </div>
+    <div class="chart-area">
+      <canvas id="acaoChart"></canvas>
+    </div>
+  </section>
 
-  <main class="layout">
-    <!-- gráfico -->
-    <section class="chart-card">
-      <div class="chart-header">
-        <div class="chart-title">
-          <h2>IBOVESPA</h2>
-          <p>149.540,43 <span class="up">+0,51%</span></p>
-        </div>
-        <div class="chips">
-          <button class="chip active">1D</button>
-          <button class="chip">5D</button>
-          <button class="chip">1M</button>
-          <button class="chip">1A</button>
-        </div>
-      </div>
-      <div class="chart-placeholder">
-        Gráfico (embed / img) aqui
-      </div>
-    </section>
+  <aside class="indice-panel">
+    <h3>Minhas Ações</h3>
 
-    <!-- índices -->
-    <aside class="indice-panel">
-      <h3>Minhas ações</h3>
-      <div class="indice-list">
-        <div class="indice-item">
-          <div class="indice-left">
-            <span class="badge">PETR4</span>
-            <span class="name">Petrobras PN</span>
+    <div class="indice-list">
+      {% if monitoramentos %}
+        {% for m in monitoramentos %}
+          <div class="indice-item" onclick="mostrarGrafico('{{ m.acao.abreviacao }}')">
+            <div class="indice-left">
+              <span class="badge">{{ m.acao.abreviacao }}</span>
+              <span class="name">{{ m.acao.nome }}</span>
+            </div>
+            <div>
+              <span class="price">R$ {{ m.acao.valor_atual|floatformat:2 }}</span>
+              {% if m.acao.percentual_mudanca >= 0 %}
+                <span class="var up">+{{ m.acao.percentual_mudanca|floatformat:2 }}%</span>
+              {% else %}
+                <span class="var down">{{ m.acao.percentual_mudanca|floatformat:2 }}%</span>
+              {% endif %}
+            </div>
+              <button class="btn-add" data-simbolo="{{ m.acao.abreviacao }}" data-nome="{{ m.acao.nome }}">
+                <i class='bx bx-search'></i>
+              </button>
           </div>
-          <div>
-            <span class="price">R$ 37,80</span>
-            <span class="var up">+1,24%</span>
-          </div>
-        </div>
-        <div class="indice-item">
-          <div class="indice-left">
-            <span class="badge">VALE3</span>
-            <span class="name">Vale ON</span>
-          </div>
-          <div>
-            <span class="price">R$ 64,10</span>
-            <span class="var down">-0,56%</span>
-          </div>
-        </div>
-        <div class="indice-item">
-          <div class="indice-left">
-            <span class="badge">ITUB4</span>
-            <span class="name">Itaú Unibanco</span>
-          </div>
-          <div>
-            <span class="price">R$ 32,05</span>
-            <span class="var up">+0,34%</span>
-          </div>
-        </div>
-        <div class="indice-item">
-          <div class="indice-left">
-            <span class="badge">B3SA3</span>
-            <span class="name">B3</span>
-          </div>
-          <div>
-            <span class="price">R$ 11,27</span>
-            <span class="var up">+0,92%</span>
-          </div>
-        </div>
-        <p class="empty">…e assim por diante</p>
-      </div>
-    </aside>
-  </main>
+        {% endfor %}
+      {% else %}
+        <p class="empty">Nenhuma ação monitorada ainda.</p>
+      {% endif %}
+    </div>
+  </aside>
+
+<div id="monitoramentoModal" class="modal hidden">
+  <div class="modal-content">
+    <h2 id="tituloModal">Salvar Histórico da Ação</h2>
+
+    <p>
+      <strong id="modal_acao_nome"></strong> (<span id="modal_acao_simbolo"></span>)
+    </p>
+
+    <label for="selectPeriodo">Selecione o período:</label>
+    <select id="selectPeriodo" style="margin-bottom: 1rem; width: 100%;">
+      {% for key, label in periodos %}
+        <option value="{{ key }}" {% if key == '1mo' %}selected{% endif %}>
+          {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <div id="resultadoHistorico" style="margin-bottom: 1rem; text-align:center; color:#333;">
+      <!-- mensagem de status aparece aqui -->
+    </div>
+
+    <div class="modal-buttons">
+      <button type="button" id="btnSalvarHistorico" class="btn-save">
+        Salvar Histórico
+      </button>
+      <button type="button" id="btnCancelar" class="btn-cancel">Fechar</button>
+    </div>
+  </div>
+</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/utils/modalHistorico.js' %}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const ctx = document.getElementById("acaoChart").getContext("2d");
+  const chartTitle = document.querySelector('.chart-title h2');
+  const chartSubtitle = document.querySelector('.chart-title p');
+  const periodoSelect = document.getElementById("selectPeriodo");
+  let simboloAtual = null;
+  let chart = null;
+
+  // 🔹 Cria gradiente suave para barras e linhas
+  function getGradient(ctx, color1, color2) {
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, color1);
+    gradient.addColorStop(1, color2);
+    return gradient;
+  }
+
+  // ============================================================
+  // GRÁFICO INICIAL – Todas as ações
+  // ============================================================
+  async function carregarTodasAcoes() {
+    chartTitle.textContent = "Todas as ações";
+    chartSubtitle.textContent = "Últimos preços registrados";
+
+    try {
+      const resp = await fetch("/banco/acoes/basicas/");
+      const data = await resp.json();
+      if (!data.ok) throw new Error(data.erro || "Erro ao carregar ações");
+
+      const labels = data.dados.map(a => a.ticker);
+      const valores = data.dados.map(a => a.valor);
+
+      const gradient = getGradient(ctx, "rgba(99,102,241,0.8)", "rgba(99,102,241,0.2)");
+
+      if (!chart) {
+        chart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "Preço Atual (R$)",
+              data: valores,
+              borderRadius: 6,
+              backgroundColor: gradient,
+              borderColor: "#6366f1",
+              borderWidth: 1.5,
+              hoverBackgroundColor: "rgba(99,102,241,0.9)"
+            }]
+          },
+          options: {
+            responsive: true,
+            animation: { duration: 1000, easing: "easeOutQuart" },
+            scales: {
+              x: { 
+                ticks: { color: "#444", font: { size: 11 } },
+                grid: { display: false }
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: "#555" },
+                grid: { color: "#f0f0f0" }
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: "#fff",
+                titleColor: "#111",
+                bodyColor: "#333",
+                borderColor: "#ccc",
+                borderWidth: 1,
+                padding: 10,
+                displayColors: false,
+                callbacks: {
+                  label: ctx => `R$ ${ctx.formattedValue}`
+                }
+              }
+            },
+            hover: {
+              mode: 'nearest',
+              intersect: true
+            }
+          }
+        });
+      } else {
+        chart.config.type = "bar";
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = valores;
+        chart.update();
+      }
+
+    } catch (e) {
+      console.error(e);
+      chartSubtitle.innerHTML = "❌ Erro ao carregar dados.";
+    }
+  }
+
+  // ============================================================
+  // GRÁFICO INDIVIDUAL – Histórico da ação
+  // ============================================================
+  async function carregarGrafico(simbolo, periodo = "1mo") {
+    chartTitle.textContent = simbolo;
+    chartSubtitle.innerHTML = "Carregando dados...";
+
+    try {
+      const resp = await fetch(`/banco/historico_ou_basico/${simbolo}/?periodo=${periodo}`);
+      const data = await resp.json();
+      if (!data.ok) {
+        chartSubtitle.innerHTML = "⚠️ " + (data.erro || "Erro ao carregar dados.");
+        return;
+      }
+
+      const labels = data.dados.map(p => p.data);
+      const valores = data.dados.map(p => p.fechamento);
+      const origem = data.origem === "historico" ? "Histórico" : "Valor atual";
+
+      if (!valores.length) {
+        chartSubtitle.innerHTML = "⚠️ Nenhum dado disponível.";
+        return;
+      }
+
+      const gradientLine = getGradient(ctx, "rgba(99,102,241,0.4)", "rgba(99,102,241,0.05)");
+
+      chart.config.type = "line";
+      chart.data.labels = labels;
+      chart.data.datasets[0] = {
+        label: `${origem} (${simbolo})`,
+        data: valores,
+        borderColor: "#6366f1",
+        backgroundColor: gradientLine,
+        fill: true,
+        tension: 0.35,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: "#6366f1",
+      };
+      chart.update();
+
+      const ultimo = valores[valores.length - 1] || 0;
+      chartSubtitle.innerHTML = `${origem}: R$ ${ultimo.toFixed(2)}`;
+    } catch (e) {
+      console.error(e);
+      chartSubtitle.innerHTML = "❌ Erro de conexão.";
+    }
+  }
+
+  // ============================================================
+  // INTERAÇÕES
+  // ============================================================
+  periodoSelect.addEventListener("change", () => {
+    if (simboloAtual) {
+      carregarGrafico(simboloAtual, periodoSelect.value);
+    }
+  });
+
+  window.mostrarGrafico = (simbolo) => {
+    simboloAtual = simbolo;
+    carregarGrafico(simbolo, periodoSelect.value);
+  };
+
+  // 🔹 Carrega gráfico inicial
+  await carregarTodasAcoes();
+});
+</script>
 
 {% endblock %}

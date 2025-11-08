@@ -50,6 +50,19 @@ class Acao(models.Model):
 # 2️⃣  HISTÓRICO DE PREÇOS (dados diários, semanais, etc.)
 # ==========================================================
 class AcaoHistorico(models.Model):
+    class PeriodoChoices(models.TextChoices):
+        D1 = "1d", "1 Dia"
+        D5 = "5d", "5 Dias"
+        M1 = "1mo", "1 Mês"
+        M3 = "3mo", "3 Meses"
+        M6 = "6mo", "6 Meses"
+        Y1 = "1y", "1 Ano"
+        Y2 = "2y", "2 Anos"
+        Y5 = "5y", "5 Anos"
+        Y10 = "10y", "10 Anos"
+        YTD = "ytd", "Ano Corrente"
+        MAX = "max", "Máximo"
+
     acao = models.ForeignKey(Acao, on_delete=models.CASCADE, related_name="historicos")
     data = models.DateField()
     abertura = models.FloatField(default=0)
@@ -58,7 +71,12 @@ class AcaoHistorico(models.Model):
     baixa = models.FloatField(default=0)
     volume = models.FloatField(default=0)
     variacao = models.FloatField(blank=True, null=True)
-    periodo = models.CharField(max_length=10, default="1d")  # Ex: "1d", "5d"
+    periodo = models.CharField(
+        max_length=10,
+        choices=PeriodoChoices.choices,
+        default=PeriodoChoices.D1,
+        help_text="Intervalo dos dados históricos conforme BRAPI"
+    )
 
     class Meta:
         verbose_name = "Histórico da Ação"
@@ -70,50 +88,7 @@ class AcaoHistorico(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.acao.abreviacao} ({self.data})"
-
-
-# ==========================================================
-# 3️⃣  DIVIDENDOS (pagamentos e eventos financeiros)
-# ==========================================================
-class Dividendo(models.Model):
-    acao = models.ForeignKey(Acao, on_delete=models.CASCADE, related_name="dividendos")
-    tipo = models.CharField(max_length=100, blank=True, null=True)
-    data_pagamento = models.DateField(blank=True, null=True)
-    valor = models.FloatField(default=0)
-    descricao = models.TextField(blank=True, null=True)
-    ultima_data_prior = models.DateField(blank=True, null=True)
-    aprovado_em = models.DateField(blank=True, null=True)
-    isin_code = models.CharField(max_length=50, blank=True, null=True)
-    observacoes = models.TextField(blank=True, null=True)
-
-    class Meta:
-        verbose_name = "Dividendo"
-        verbose_name_plural = "Dividendos"
-        ordering = ["-data_pagamento"]
-        indexes = [
-            models.Index(fields=["acao", "data_pagamento"]),
-        ]
-
-    def __str__(self):
-        return f"{self.acao.abreviacao} - {self.tipo or 'Dividendo'}"
-
-
-# ==========================================================
-# 4️⃣  PERFIL DA EMPRESA (dados estáticos e institucionais)
-# ==========================================================
-class EmpresaPerfil(models.Model):
-    acao = models.OneToOneField(Acao, on_delete=models.CASCADE, related_name="perfil")
-    endereco = models.CharField(max_length=200, blank=True, null=True)
-    cidade = models.CharField(max_length=100, blank=True, null=True)
-    estado = models.CharField(max_length=100, blank=True, null=True)
-    pais = models.CharField(max_length=100, blank=True, null=True)
-    setor = models.CharField(max_length=100, blank=True, null=True)
-    industria = models.CharField(max_length=100, blank=True, null=True)
-    funcionarios = models.IntegerField(blank=True, null=True)
-    descricao_longa = models.TextField(blank=True, null=True)
-    site = models.URLField(blank=True, null=True)
-    telefone = models.CharField(max_length=50, blank=True, null=True)
+        return f"{self.acao.abreviacao} ({self.data}) - {self.periodo}"
 
     class Meta:
         verbose_name = "Perfil da Empresa"
@@ -121,3 +96,18 @@ class EmpresaPerfil(models.Model):
 
     def __str__(self):
         return f"Perfil de {self.acao.abreviacao}"
+
+class Monitoramento(models.Model):
+    DIRECAO_CHOICES = [
+        ('acima', 'Acima'),
+        ('acima_ou_igual', 'Acima ou Igual'),
+        ('abaixo', 'Abaixo'),
+        ('abaixo_ou_igual', 'Abaixo ou Igual'),
+    ]
+
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    acao = models.ForeignKey(Acao, on_delete=models.CASCADE)
+    ativo = models.BooleanField(default=True)
+    adicionado_em = models.DateTimeField(auto_now_add=True)
+    preco_alvo = models.FloatField()
+    direcao = models.CharField(max_length=20, choices=DIRECAO_CHOICES)

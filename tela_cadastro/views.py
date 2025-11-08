@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib import messages
+
+from tela_cadastro.models import Acao, Monitoramento
 from .forms import LoginForm, RegistroForm
 
 def login_view(request):

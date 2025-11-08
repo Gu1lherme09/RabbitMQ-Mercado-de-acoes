@@ -1,235 +1,20 @@
-import os
+import os , requests
 from django.http import JsonResponse
-import requests
 from datetime import datetime
 from typing import Optional, Dict
 from django.conf import settings
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_POST,require_GET
 
-from tela_cadastro.models import Acao, AcaoHistorico, Dividendo, EmpresaPerfil
+from tela_cadastro.models import Acao, AcaoHistorico
 
-
-# Função genérica para fazer GET na API do brapi
-def _brapi_get(path: str, params: Optional[Dict] = None):
+def safe_get(obj, key, default=0):
     """
-    Wrapper genérico para acessar a API brapi.dev
-    Usa o token do settings (se existir)
+    Retorna valor seguro de um dicionário, evitando None, KeyError e valores vazios.
     """
-    if params is None:
-        params = {}
-
-    base_url = "https://brapi.dev/api"
-    headers = {}
-
-    # adiciona token se estiver definido
-    if hasattr(settings, "BRAPI_TOKEN") and settings.BRAPI_TOKEN:
-        headers["Authorization"] = f"Bearer {settings.BRAPI_TOKEN}"
-
-    url = f"{base_url}/{path.lstrip('/')}"
-    response = requests.get(url, headers=headers, params=params)
-
-    if response.status_code != 200:
-        raise Exception(f"Erro {response.status_code}: {response.text}")
-
-    return response.json()
-
-def atualizar_essencial():
-    """
-    Atualiza informações básicas de todas as ações cadastradas no banco.
-    Usa /api/quote/{tickers} da Brapi.
-    """
-    tickers = [a.abreviacao for a in Acao.objects.all()]
-    if not tickers:
-        print("⚠️ Nenhuma ação cadastrada.")
-        return
-
-    # Se tiver MUITOS tickers, depois dá pra fatiar em grupos.
-    tickers_str = ",".join(tickers)
-    print(f"🔄 Atualizando dados essenciais de {len(tickers)} ações...")
-
-    try:
-        data = _brapi_get(f"/quote/{tickers_str}")
-        results = data.get("results", [])
-
-        for r in results:
-            symbol = r.get("symbol")
-            if not symbol:
-                continue
-
-            Acao.objects.update_or_create(
-                abreviacao=symbol,
-                defaults={
-                    "nome": r.get("shortName") or "",
-                    "nome_completo": r.get("longName") or "",
-                    "moeda": r.get("currency", "BRL"),
-
-                    "valor_atual": r.get("regularMarketPrice") or 0,
-                    "alta_dia": r.get("regularMarketDayHigh") or 0,
-                    "baixa_dia": r.get("regularMarketDayLow") or 0,
-                    "percentual_mudanca": r.get("regularMarketChangePercent") or 0,
-                    "variacao": r.get("regularMarketChange") or 0,
-                    "preco_abertura": r.get("regularMarketOpen") or 0,
-                    "preco_anterior": r.get("regularMarketPreviousClose") or 0,
-                    "volume": r.get("regularMarketVolume") or 0,
-                    "market_cap": r.get("marketCap") or 0,
-                    "faixa_dia": r.get("regularMarketDayRange") or "",
-
-                    "setor": r.get("sector") or "",
-                    "industria": r.get("industry") or "",
-                    "logo_url": r.get("logourl") or "",
-
-                    "atualizado_em": datetime.now(),
-                },
-            )
-
-        print("✅ Atualização essencial concluída!")
-
-    except Exception as e:
-        print(f"❌ Erro ao atualizar essencial: {e}")
-
-def buscar_detalhes_acao(ticker: str):
-    """
-    Busca dados completos de UMA ação:
-    - cotação
-    - perfil da empresa (summaryProfile)
-    - dividendos (dividendsData)
-    """
-    try:
-        print(f"🔍 Buscando dados completos de {ticker}...")
-
-        data = _brapi_get(
-            f"/quote/{ticker}",
-            params={
-                "fundamental": "true",
-                "dividends": "true",
-                "modules": "summaryProfile",
-            },
-        )
-
-        results = data.get("results", [])
-        if not results:
-            raise RuntimeError("Ticker não encontrado na Brapi")
-
-        r = results[0]
-
-        # --- Ação (dados principais) ---
-        acao, _ = Acao.objects.update_or_create(
-            abreviacao=r.get("symbol"),
-            defaults={
-                "nome": r.get("shortName") or "",
-                "nome_completo": r.get("longName") or "",
-                "moeda": r.get("currency", "BRL"),
-
-                "valor_atual": r.get("regularMarketPrice") or 0,
-                "alta_dia": r.get("regularMarketDayHigh") or 0,
-                "baixa_dia": r.get("regularMarketDayLow") or 0,
-                "percentual_mudanca": r.get("regularMarketChangePercent") or 0,
-                "variacao": r.get("regularMarketChange") or 0,
-                "preco_abertura": r.get("regularMarketOpen") or 0,
-                "preco_anterior": r.get("regularMarketPreviousClose") or 0,
-                "volume": r.get("regularMarketVolume") or 0,
-                "market_cap": r.get("marketCap") or 0,
-                "faixa_dia": r.get("regularMarketDayRange") or "",
-
-                "setor": r.get("sector") or "",
-                "industria": r.get("industry") or "",
-                "logo_url": r.get("logourl") or "",
-
-                "atualizado_em": datetime.now(),
-            },
-        )
-
-        # --- Perfil da Empresa (summaryProfile) ---
-        profile = (r.get("summaryProfile") or {})  # depende do módulo
-        EmpresaPerfil.objects.update_or_create(
-            acao=acao,
-            defaults={
-                "endereco": profile.get("address1") or "",
-                "cidade": profile.get("city") or "",
-                "estado": profile.get("state") or "",
-                "pais": profile.get("country") or "",
-                "setor": profile.get("sector") or r.get("sector") or "",
-                "industria": profile.get("industry") or r.get("industry") or "",
-                "funcionarios": profile.get("fullTimeEmployees") or None,
-                "descricao_longa": profile.get("longBusinessSummary") or "",
-                "site": profile.get("website") or "",
-                "telefone": profile.get("phone") or "",
-            },
-        )
-
-        # --- Dividendos (dividendsData) ---
-        for d in r.get("dividendsData", []):
-            data_pag = d.get("paymentDate")
-            # cuidado: pode vir None
-            Dividendo.objects.update_or_create(
-                acao=acao,
-                data_pagamento=data_pag,
-                defaults={
-                    "tipo": d.get("label"),
-                    "valor": d.get("amount") or 0,
-                    "descricao": d.get("assetIssued") or "",
-                    "ultima_data_prior": d.get("lastDatePrior"),
-                    "aprovado_em": d.get("approvedOn"),
-                    "isin_code": d.get("isinCode"),
-                    "observacoes": d.get("notes"),
-                },
-            )
-
-        print(f"✅ {ticker} atualizado com sucesso.")
-        return acao
-
-    except Exception as e:
-        print(f"❌ Erro ao buscar detalhes de {ticker}: {e}")
-        return None
-
-def buscar_historico_acao(ticker: str, periodo: str = "1mo"):
-    """
-    Busca histórico de preços de uma ação para o período informado.
-    Ex: periodo="1mo", "6mo", "1y", "5y", "max"
-    """
-    try:
-        data = _brapi_get(
-            f"/quote/{ticker}",
-            params={
-                "range": periodo,
-                "interval": "1d",
-            },
-        )
-
-        results = data.get("results", [])
-        if not results:
-            print(f"⚠️ Nenhum resultado de histórico para {ticker}.")
-            return
-
-        r = results[0]
-        prices = r.get("historicalDataPrice", [])
-        if not prices:
-            print(f"⚠️ Não há historicalDataPrice para {ticker}.")
-            return
-
-        acao = Acao.objects.get(abreviacao=ticker)
-
-        for p in prices:
-            dt = datetime.fromtimestamp(p["date"]).date()
-
-            AcaoHistorico.objects.update_or_create(
-                acao=acao,
-                data=dt,
-                periodo=periodo,
-                defaults={
-                    "abertura": p.get("open") or 0,
-                    "fechamento": p.get("close") or 0,
-                    "alta": p.get("high") or 0,
-                    "baixa": p.get("low") or 0,
-                    "volume": p.get("volume") or 0,
-                },
-            )
-
-        print(f"📊 Histórico de {ticker} ({periodo}) atualizado: {len(prices)} pontos.")
-
-    except Exception as e:
-        print(f"⚠️ Erro ao buscar histórico de {ticker}: {e}")
-
+    if not obj:
+        return default
+    val = obj.get(key)
+    return val if val not in (None, "", "null") else default
 
 def atualizar_acoes_completas(request):
     """
@@ -274,22 +59,22 @@ def atualizar_acoes_completas(request):
             acao, created = Acao.objects.update_or_create(
                 abreviacao=ticker,
                 defaults={
-                    "nome": s.get("name") or ticker,
-                    "nome_completo": quote.get("longName") if quote else s.get("name"),
-                    "moeda": quote.get("currency") if quote else "BRL",
-                    "valor_atual": s.get("close") or (quote.get("regularMarketPrice") if quote else 0),
-                    "alta_dia": quote.get("regularMarketDayHigh") if quote else 0,
-                    "baixa_dia": quote.get("regularMarketDayLow") if quote else 0,
-                    "percentual_mudanca": s.get("change") or (quote.get("regularMarketChangePercent") if quote else 0),
-                    "variacao": quote.get("regularMarketChange") if quote else 0,
-                    "volume": s.get("volume") or (quote.get("regularMarketVolume") if quote else 0),
-                    "preco_abertura": quote.get("regularMarketOpen") if quote else 0,
-                    "preco_anterior": quote.get("regularMarketPreviousClose") if quote else 0,
-                    "faixa_dia": f"{quote.get('regularMarketDayLow', 0)} - {quote.get('regularMarketDayHigh', 0)}" if quote else "",
-                    "market_cap": s.get("market_cap") or (quote.get("marketCap") if quote else 0),
-                    "logo_url": s.get("logo") or (quote.get("logourl") if quote else ""),
-                    "setor": s.get("sector") or (quote.get("sector") if quote else ""),
-                    "industria": quote.get("industry") if quote else "",
+                    "nome": safe_get(s, "name", ticker),
+                    "nome_completo": safe_get(quote, "longName", safe_get(s, "name", ticker)),
+                    "moeda": safe_get(quote, "currency", "BRL"),
+                    "valor_atual": safe_get(s, "close", safe_get(quote, "regularMarketPrice", 0)),
+                    "alta_dia": safe_get(quote, "regularMarketDayHigh", 0),
+                    "baixa_dia": safe_get(quote, "regularMarketDayLow", 0),
+                    "percentual_mudanca": safe_get(s, "change", safe_get(quote, "regularMarketChangePercent", 0)),
+                    "variacao": safe_get(quote, "regularMarketChange", 0),
+                    "volume": safe_get(s, "volume", safe_get(quote, "regularMarketVolume", 0)),
+                    "preco_abertura": safe_get(quote, "regularMarketOpen", 0),
+                    "preco_anterior": safe_get(quote, "regularMarketPreviousClose", 0),
+                    "faixa_dia": f"{safe_get(quote, 'regularMarketDayLow', 0)} - {safe_get(quote, 'regularMarketDayHigh', 0)}",
+                    "market_cap": safe_get(s, "market_cap", safe_get(quote, "marketCap", 0)),
+                    "logo_url": safe_get(s, "logo", safe_get(quote, "logourl", "")),
+                    "setor": safe_get(s, "sector", safe_get(quote, "sector", "")),
+                    "industria": safe_get(quote, "industry", ""),
                 },
             )
 
@@ -305,3 +90,180 @@ def atualizar_acoes_completas(request):
         "falhas": erros,
         "qtde_processadas": len(stocks),
     })
+
+
+@require_POST
+def adicionar_acao_completa(request):
+    nome_ou_ticker = request.POST.get("busca", "").strip()
+
+    if not nome_ou_ticker:
+        return JsonResponse({"ok": False, "erro": "Campo de busca vazio."})
+
+    token = os.getenv("BRAPI_TOKEN")
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    base_url = "https://brapi.dev/api"
+
+    try:
+        # 1️⃣ Buscar lista geral
+        list_url = f"{base_url}/quote/list"
+        params = {"limit": 1000}
+        resp = requests.get(list_url, headers=headers, params=params)
+        data = resp.json()
+
+        stocks = data.get("stocks", [])
+
+        nome_ou_ticker_lower = nome_ou_ticker.lower()
+
+        # 🔹 1️⃣ Busca ticker exato
+        stock = next(
+            (s for s in stocks if s.get("stock", "").lower() == nome_ou_ticker_lower),
+            None
+        )
+
+        # 🔹 2️⃣ Se não achar, busca nome exato
+        if not stock:
+            stock = next(
+                (s for s in stocks if s.get("name", "").lower() == nome_ou_ticker_lower),
+                None
+            )
+
+        # 🔹 3️⃣ Se ainda não achar, busca correspondência parcial (fallback)
+        if not stock:
+            stock = next(
+                (s for s in stocks if nome_ou_ticker_lower in s.get("stock", "").lower() 
+                or nome_ou_ticker_lower in s.get("name", "").lower()),
+                None
+            )
+
+        if not stock:
+            return JsonResponse({"ok": False, "erro": f"Ação '{nome_ou_ticker}' não encontrada na BRAPI."})
+
+        ticker = stock.get("stock")
+        nome = stock.get("name", ticker)
+
+        # Busca detalhes completos
+        detail_url = f"{base_url}/quote/{ticker}"
+        detail_resp = requests.get(
+            detail_url,
+            headers=headers,
+            params={"range": "1d", "modules": "summaryProfile"}
+        )
+        detail_data = detail_resp.json()
+
+        quote = detail_data.get("results", [{}])[0]
+        profile = quote.get("summaryProfile", {})
+
+        if not profile.get("sector") and not ticker.endswith(("11", "12")):
+            base_ticker = (
+                ticker.replace("34", "")
+                    .replace("F", "")
+                    .rstrip()
+            )
+            if base_ticker != ticker:
+                try:
+                    resp2 = requests.get(
+                        f"{base_url}/quote/{base_ticker}",
+                        headers=headers,
+                        params={"modules": "summaryProfile"},
+                        timeout=10
+                    )
+                    data2 = resp2.json()
+                    prof2 = data2.get("results", [{}])[0].get("summaryProfile", {})
+                    if prof2:
+                        profile.update(prof2)
+                except Exception as e:
+                    print(f"⚠️ Falha no fallback global: {e}")
+
+        acao, created = Acao.objects.update_or_create(
+            abreviacao=ticker,
+            defaults={
+                "nome": nome,
+                "nome_completo": safe_get(quote, "longName", nome),
+                "moeda": safe_get(quote, "currency", "BRL"),
+                "valor_atual": safe_get(quote, "regularMarketPrice", 0),
+                "alta_dia": safe_get(quote, "regularMarketDayHigh", 0),
+                "baixa_dia": safe_get(quote, "regularMarketDayLow", 0),
+                "percentual_mudanca": safe_get(quote, "regularMarketChangePercent", 0),
+                "variacao": safe_get(quote, "regularMarketChange", 0),
+                "volume": safe_get(quote, "regularMarketVolume", 0),
+                "preco_abertura": safe_get(quote, "regularMarketOpen", 0),
+                "preco_anterior": safe_get(quote, "regularMarketPreviousClose", 0),
+                "faixa_dia": f"{safe_get(quote, 'regularMarketDayLow', 0)} - {safe_get(quote, 'regularMarketDayHigh', 0)}",
+                "market_cap": safe_get(quote, "marketCap", 0),
+                "logo_url": safe_get(quote, "logourl", ""),
+                "setor": safe_get(profile, "sector", safe_get(quote, "sector", "")),
+                "industria": safe_get(profile, "industry", safe_get(quote, "industry", "")),
+            },
+        )
+
+        return JsonResponse({
+            "ok": True,
+            "msg": f"Ação {ticker} ({nome}) adicionada com sucesso!",
+            "ticker": ticker,
+            "nome": nome,
+            "acao_id": acao.id
+        })
+
+    except Exception as e:
+        return JsonResponse({"ok": False, "erro": str(e)})
+
+@require_GET
+def historico_acao(request, ticker):
+    """
+    Busca o histórico de preços de uma ação da BRAPI e salva no banco.
+    """
+    periodo = request.GET.get("periodo", "1mo")
+    token = os.getenv("BRAPI_TOKEN")
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    base_url = "https://brapi.dev/api"
+
+    # Corrige o ticker automaticamente
+    ticker_brapi = ticker if "." in ticker else f"{ticker}.SA"
+
+    try:
+        url = f"{base_url}/quote/{ticker_brapi}"
+        params = {"range": periodo, "interval": "1d"}
+        resp = requests.get(url, headers=headers, params=params)
+        data = resp.json()
+
+        results = data.get("results", [])
+        if not results:
+            return JsonResponse({"ok": False, "erro": f"Ticker '{ticker}' não encontrado na BRAPI."})
+
+        r = results[0]
+        prices = r.get("historicalDataPrice", [])
+        if not prices:
+            return JsonResponse({"ok": False, "erro": f"Sem dados para o período '{periodo}'."})
+
+        acao = Acao.objects.filter(abreviacao=ticker).first()
+        if not acao:
+            return JsonResponse({"ok": False, "erro": f"Ação '{ticker}' não existe no banco."})
+
+        count_salvos = 0
+        for p in prices:
+            data_p = datetime.fromtimestamp(p["date"]).date()
+            _, created = AcaoHistorico.objects.update_or_create(
+                acao=acao,
+                data=data_p,
+                periodo=periodo,
+                defaults={
+                    "abertura": safe_get(p, "open", 0),
+                    "fechamento": safe_get(p, "close", 0),
+                    "alta": safe_get(p, "high", 0), 
+                    "baixa": safe_get(p, "low", 0),
+                    "volume": safe_get(p, "volume", 0),
+                    "variacao": safe_get(p, "close", 0) - safe_get(p, "open", 0),
+                }
+            ) 
+
+            if created:
+                count_salvos += 1
+
+        return JsonResponse({
+            "ok": True,
+            "msg": f"Histórico ({periodo}) salvo com sucesso — {count_salvos} registros inseridos.",
+            "periodo": periodo
+        })
+
+    except Exception as e:
+        return JsonResponse({"ok": False, "erro": str(e)})

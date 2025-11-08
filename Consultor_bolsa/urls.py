@@ -1,25 +1,9 @@
-"""
-URL configuration for Consultor_bolsa project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls.static import static
 
 from Consultor_bolsa import settings
-from api.views import atualizar_acoes_completas
+from api import views as brapi
 from . import view
 from tela_cadastro import views as tc
 
@@ -32,6 +16,7 @@ urlpatterns = [
 
     # ------------------------- Consulta ---------------------------
     path('consultar/', view.consultar_acoes, name="consultar"),
+    path('monitoramento/criar/', view.criar_monitoramento, name='criar_monitoramento'),
     # --------------------------------------------------------------
 
     # ------------------------- Tela de cadastro -------------------
@@ -40,8 +25,15 @@ urlpatterns = [
     path('logout/', tc.logout_view, name='logout'),
     # --------------------------------------------------------------
 
-    # ------------------------- teste -------------------
-    path('api/testar-essencial/', atualizar_acoes_completas, name='testar_essencial'),
+    # ------------------------- brapi ------------------------------
+    path("ajax/adicionar-acao-completa/", brapi.adicionar_acao_completa, name="ajax_adicionar_acao_completa"),
+    path('api/testar-essencial/', brapi.atualizar_acoes_completas, name='testar_essencial'),
+    path("api/historico/<str:ticker>/", brapi.historico_acao, name="ajax_historico_acao"),
+    # --------------------------------------------------------------
+
+    # ------------------------- Gráfico ----------------------------
+    path("banco/acoes/basicas/", view.dados_basicos_acoes, name="api_dados_basicos_acoes"),
+    path("banco/historico_ou_basico/<str:ticker>/", view.historico_ou_basico, name="api_historico_ou_basico"),
     # --------------------------------------------------------------
 ]
 

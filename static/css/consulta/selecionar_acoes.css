@@ -24,32 +24,6 @@
   margin: 0;
 }
 
-.acoes-filtros {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-.acoes-filtros select, .btn-filtro {
-  background: var(--card);
-  border: 1px solid #e2e8f0;
-  border-radius: .6rem;
-  padding: .4rem .7rem;
-  font-size: .85rem;
-  cursor: pointer;
-}
-
-.btn-filtro {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  font-weight: 500;
-  transition: 0.2s;
-}
-
-.btn-filtro:hover {
-  background: #4f46e5;
-}
 
 .acoes-tabela {
   background: var(--card);
@@ -106,25 +80,51 @@ th {
 .btn-add:hover {
   transform: scale(1.1);
 }
-.filtros-form {
+
+.input-busca {
+  width: 100%;
+  max-width: 320px;
+  padding: 10px 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.input-busca:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+  outline: none;
+}
+
+.acoes-filtros {
   display: flex;
   flex-wrap: wrap;
+  gap: 10px;
   align-items: center;
-  gap: 0.6rem;
+  margin-bottom: 1.2rem;
 }
 
-.filtros-form input[type="text"] {
-  flex: 1;
-  min-width: 180px;
-  padding: .4rem .7rem;
-  border: 1px solid #e2e8f0;
-  border-radius: .6rem;
-  font-size: .85rem;
-  background: var(--card);
+.nova-acao-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.filtros-form input[type="text"]:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+.btn-add-acao {
+  background: linear-gradient(135deg, #2f80ed, #b82dd9);
+  border: none;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
 }
+
+.btn-add-acao:hover {
+  background: linear-gradient(135deg, #083f86, #541464);
+}
+
