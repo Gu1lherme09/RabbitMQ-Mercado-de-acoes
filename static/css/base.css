@@ -90,3 +90,33 @@ body {
 .page-content {
   padding: 2rem;
 }
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #000; /* texto preto */
+  text-decoration: none;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.logo img {
+  width: 28px;
+  height: 28px;
+}
+
+.logo span {
+  color: #000; /* garante que o texto fique preto */
+}
+
+.logo:hover {
+  text-decoration: none;
+  text-underline-offset: 4px;
+  transform: scale(1.03); /* leve zoom elegante */
+}
+
+/* opcional: evita mudar a cor da logo mesmo no hover */
+.logo:hover span {
+   color: #6366f1; /* igual ao hover dos links principais */
+}

@@ -1,9 +1,11 @@
+{% load static %}
 <header class="topbar">
-  <div class="logo">
-      <i class='bx bx-line-chart'></i>
-      <span>BolsaView</span>
-  </div>
-
+    <a href="{% url 'home' %}" style="text-decoration: none;">
+    <div class="logo">
+        <img src="{% static 'img/favicon.svg' %}" alt="Logo BolsaView">
+        <span>BolsaView</span>
+    </div>
+    </a>
   <nav class="navbar">
       <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
           Home

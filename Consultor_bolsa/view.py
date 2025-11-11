@@ -5,7 +5,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.views.decorators.http import require_POST,require_GET
 from django.http import JsonResponse
 
-from tela_cadastro.models import Acao, AcaoHistorico, Monitoramento
+from tela_cadastro.models import Acao, AcaoHistorico, Monitoramento, Usuario
 
 @login_required(login_url='login')
 def home(request):
@@ -20,7 +20,15 @@ def home(request):
 @login_required(login_url='login')
 def consultar_acoes(request):
     acoes = Acao.objects.all()
-    return render(request,'consultar/consultar.html',{'acoes': acoes})
+     # pega os IDs das ações já monitoradas por este usuário
+    monitoradas_ids = Monitoramento.objects.filter(usuario=request.user).values_list('acao_id', flat=True)
+
+    ctx = {
+        'acoes': acoes,
+        'monitoradas_ids': monitoradas_ids,
+    }
+
+    return render(request,'consultar/consultar.html',ctx)
 
 @require_POST
 @login_required

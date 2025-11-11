@@ -12,7 +12,7 @@
         <h2>Todas as ações</h2>
         <p><span class="up"></span></p>
       </div>
-      <div class="chart-filtros">
+      <div class="chart-filtros" id="chartFiltros">
         <label for="selectPeriodo" style="font-size:0.9rem; color:#333;">Período:</label>
         <select id="selectPeriodo" style="margin-left:0.4rem; padding:0.3rem; border-radius:6px;">
           <option value="1w">1 Semana</option>
@@ -39,7 +39,8 @@
               <span class="badge">{{ m.acao.abreviacao }}</span>
               <span class="name">{{ m.acao.nome }}</span>
             </div>
-            <div>
+            
+            <div class="indice-right">
               <span class="price">R$ {{ m.acao.valor_atual|floatformat:2 }}</span>
               {% if m.acao.percentual_mudanca >= 0 %}
                 <span class="var up">+{{ m.acao.percentual_mudanca|floatformat:2 }}%</span>
@@ -47,9 +48,10 @@
                 <span class="var down">{{ m.acao.percentual_mudanca|floatformat:2 }}%</span>
               {% endif %}
             </div>
-              <button class="btn-add" data-simbolo="{{ m.acao.abreviacao }}" data-nome="{{ m.acao.nome }}">
-                <i class='bx bx-search'></i>
-              </button>
+
+            <button class="btn-add" data-simbolo="{{ m.acao.abreviacao }}" data-nome="{{ m.acao.nome }}">
+              <i class='bx bx-search'></i>
+            </button>
           </div>
         {% endfor %}
       {% else %}
@@ -98,6 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const chartTitle = document.querySelector('.chart-title h2');
   const chartSubtitle = document.querySelector('.chart-title p');
   const periodoSelect = document.getElementById("selectPeriodo");
+  const filtroPeriodo = document.getElementById("chartFiltros");
   let simboloAtual = null;
   let chart = null;
 
@@ -115,6 +118,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function carregarTodasAcoes() {
     chartTitle.textContent = "Todas as ações";
     chartSubtitle.textContent = "Últimos preços registrados";
+    filtroPeriodo.style.display = "none";  // 🔴 esconde o filtro
 
     try {
       const resp = await fetch("/banco/acoes/basicas/");
@@ -195,6 +199,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function carregarGrafico(simbolo, periodo = "1mo") {
     chartTitle.textContent = simbolo;
     chartSubtitle.innerHTML = "Carregando dados...";
+    filtroPeriodo.style.display = "flex";  // 🟢 mostra o filtro
 
     try {
       const resp = await fetch(`/banco/historico_ou_basico/${simbolo}/?periodo=${periodo}`);

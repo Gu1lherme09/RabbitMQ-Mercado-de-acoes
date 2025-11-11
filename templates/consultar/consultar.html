@@ -60,6 +60,7 @@
           <td>{{ acao.volume|floatformat:0|intcomma }}</td>
           <td>R$ {{ acao.market_cap|floatformat:2|intcomma }}</td>
           <td>{{ acao.setor|default:"—" }}</td>
+          {% if acao.id not in monitoradas_ids %}
           <td>
             <button 
               type="button" 
@@ -70,6 +71,7 @@
               +
             </button>
           </td>
+          {% endif %}
         </tr>
         {% empty %}
         <tr><td colspan="8" class="no-data">Nenhuma ação cadastrada.</td></tr>
