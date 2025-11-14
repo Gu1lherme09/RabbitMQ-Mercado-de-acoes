@@ -4,13 +4,14 @@ from django.db import models
 class Usuario(AbstractUser):
     telefone = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(unique=True)
+    chat_id = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return self.username
     
 
 # ==========================================================
-# 1️⃣  AÇÃO (dados principais do ativo)
+# 1︝⃣  AÇÃO (dados principais do ativo)
 # ==========================================================
 class Acao(models.Model):
     abreviacao = models.CharField(max_length=10, unique=True)  # Ex: PETR4
@@ -47,7 +48,7 @@ class Acao(models.Model):
 
 
 # ==========================================================
-# 2️⃣  HISTÓRICO DE PREÇOS (dados diários, semanais, etc.)
+# 2︝⃣  HISTÓRICO DE PREÇOS (dados diários, semanais, etc.)
 # ==========================================================
 class AcaoHistorico(models.Model):
     class PeriodoChoices(models.TextChoices):
