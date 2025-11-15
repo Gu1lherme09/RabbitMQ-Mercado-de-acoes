@@ -1,10 +1,14 @@
 Rodar os seguintes comandos no terminal para configurar o ambiente:
 pip install django
 python.exe -m pip install --upgrade pip
+
 pip install brapi
 pip install pyTelegramBotApi
 pip install pytelegrambotapi --upgrade
 python manage.py makemigrations
 python manage.py migrate
 python .\manage.py runserver
- python .\manage.py makemigrations
+python .\manage.py makemigrations
+
+## erros cmd 
+Se caso der erro para realizar a instalação do psycopg[binary]>=3.2.1, é so rodar no cmd: pip install "psycopg[binary]"
