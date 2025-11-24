@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path
 from django.conf.urls.static import static
 
-from Consultor_bolsa import settings
+from consultor_bolsa import settings
 from api import views as brapi
 from . import view
 from tela_cadastro import views as tc

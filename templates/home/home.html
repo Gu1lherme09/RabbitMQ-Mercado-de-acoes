@@ -14,9 +14,9 @@
       </div>
       <div class="chart-filtros" id="chartFiltros">
         <label for="selectPeriodo" style="font-size:0.9rem; color:#333;">Período:</label>
-        <select id="selectPeriodo" style="margin-left:0.4rem; padding:0.3rem; border-radius:6px;">
+        <select id="selectPeriodos" style="margin-left:0.4rem; padding:0.3rem; border-radius:6px;" data-fancy>
           <option value="1w">1 Semana</option>
-          <option value="1mo" selected>1 Mês</option>
+          <option value="1mo">1 Mês</option>
           <option value="3mo">3 Meses</option>
           <option value="6mo">6 Meses</option>
           <option value="1y">1 Ano</option>
@@ -69,7 +69,7 @@
     </p>
 
     <label for="selectPeriodo">Selecione o período:</label>
-    <select id="selectPeriodo" style="margin-bottom: 1rem; width: 100%;">
+    <select id="selectPeriodo" style="margin-bottom: 1rem; width: 100%;" data-fancy>
       {% for key, label in periodos %}
         <option value="{{ key }}" {% if key == '1mo' %}selected{% endif %}>
           {{ label }}
@@ -78,7 +78,6 @@
     </select>
 
     <div id="resultadoHistorico" style="margin-bottom: 1rem; text-align:center; color:#333;">
-      <!-- mensagem de status aparece aqui -->
     </div>
 
     <div class="modal-buttons">
@@ -95,16 +94,27 @@
 <script src="{% static 'js/utils/modalHistorico.js' %}"></script>
 
 <script>
+
+  const periodoSelectEl = document.getElementById('selectPeriodo');
+
+  if (periodoSelectEl && window.Choices) {
+    const periodoChoices = new Choices(periodoSelectEl, {
+      searchEnabled: false,  
+      itemSelectText: '',  
+      shouldSort: false,      
+    });
+  }
+
+
 document.addEventListener("DOMContentLoaded", async () => {
   const ctx = document.getElementById("acaoChart").getContext("2d");
   const chartTitle = document.querySelector('.chart-title h2');
   const chartSubtitle = document.querySelector('.chart-title p');
-  const periodoSelect = document.getElementById("selectPeriodo");
+  const periodoSelect = document.getElementById("selectPeriodos");
   const filtroPeriodo = document.getElementById("chartFiltros");
   let simboloAtual = null;
   let chart = null;
 
-  // 🔹 Cria gradiente suave para barras e linhas
   function getGradient(ctx, color1, color2) {
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, color1);
@@ -112,13 +122,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     return gradient;
   }
 
-  // ============================================================
-  // GRÁFICO INICIAL – Todas as ações
-  // ============================================================
   async function carregarTodasAcoes() {
     chartTitle.textContent = "Todas as ações";
     chartSubtitle.textContent = "Últimos preços registrados";
-    filtroPeriodo.style.display = "none";  // 🔴 esconde o filtro
+    filtroPeriodo.style.display = "none"; 
 
     try {
       const resp = await fetch("/banco/acoes/basicas/");
@@ -193,13 +200,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
-  // GRÁFICO INDIVIDUAL – Histórico da ação
-  // ============================================================
   async function carregarGrafico(simbolo, periodo = "1mo") {
     chartTitle.textContent = simbolo;
     chartSubtitle.innerHTML = "Carregando dados...";
-    filtroPeriodo.style.display = "flex";  // 🟢 mostra o filtro
+    filtroPeriodo.style.display = "flex"; 
 
     try {
       const resp = await fetch(`/banco/historico_ou_basico/${simbolo}/?periodo=${periodo}`);
@@ -243,9 +247,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ============================================================
-  // INTERAÇÕES
-  // ============================================================
   periodoSelect.addEventListener("change", () => {
     if (simboloAtual) {
       carregarGrafico(simboloAtual, periodoSelect.value);
@@ -257,7 +258,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     carregarGrafico(simbolo, periodoSelect.value);
   };
 
-  // 🔹 Carrega gráfico inicial
   await carregarTodasAcoes();
 });
 </script>

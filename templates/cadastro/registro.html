@@ -6,8 +6,9 @@
     <title>Registro</title>
     <link rel="stylesheet" href="{% static 'css/cadastro/cadastro.css' %}">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
 </head>
-<body>
+<body class="auth-bg">
 <div class="page">
     <div class="auth-box">
         <div class="tabs">
@@ -18,7 +19,6 @@
         <form method="post" class="form show">
             {% csrf_token %}
 
-            {# bloco bonito de erro #}
             {% if form.non_field_errors or form.email.errors or form.password2.errors %}
                 <div class="error-msg">
                     <i class='bx bx-error-circle'></i>

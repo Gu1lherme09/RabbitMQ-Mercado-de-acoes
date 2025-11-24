@@ -7,7 +7,7 @@ from .forms import LoginForm, RegistroForm
 
 def login_view(request):
     if request.method == 'POST':
-        form = LoginForm(request.POST)  # 👈 sem passar request
+        form = LoginForm(request.POST) 
         if form.is_valid():
             user = form.cleaned_data['user']
             login(request, user)

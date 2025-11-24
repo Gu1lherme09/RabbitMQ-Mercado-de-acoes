@@ -4,9 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const salvar = document.getElementById('btnSalvarHistorico');
   const selectPeriodo = document.getElementById('selectPeriodo');
   const resultado = document.getElementById('resultadoHistorico');
+  const periodoSelectEl = document.getElementById('selectPeriodo');
+
   let simboloAtual = null;
 
-  // 🔍 Abrir modal ao clicar na lupa
+
   document.querySelectorAll('.btn-add').forEach(btn => {
     btn.addEventListener('click', () => {
       simboloAtual = btn.dataset.simbolo;
@@ -20,11 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 💾 Salvar histórico
   salvar.addEventListener('click', async () => {
     if (!simboloAtual) return;
     const periodo = selectPeriodo.value;
-
+    
     resultado.innerHTML = "⏳ Buscando e salvando histórico...";
 
     try {
@@ -42,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ❌ Fechar modal
   cancelar.addEventListener('click', () => {
     modal.classList.add('hidden');
   });

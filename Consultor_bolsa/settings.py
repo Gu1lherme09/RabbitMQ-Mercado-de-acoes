@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'tela_cadastro',
     'django.contrib.humanize',  
+    'monitoramento',
 ]
 
 MIDDLEWARE = [
@@ -54,7 +55,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'Consultor_bolsa.urls'
+ROOT_URLCONF = 'consultor_bolsa.urls'
 
 TEMPLATES = [
     {
@@ -72,7 +73,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Consultor_bolsa.wsgi.application'
+WSGI_APPLICATION = 'consultor_bolsa.wsgi.application'
 
 
 # Database
@@ -117,13 +118,10 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',   # isso aponta pra Consultor_bolsa/static
+    BASE_DIR / 'static',   
 ]
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'

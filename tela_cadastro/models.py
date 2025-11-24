@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -10,12 +11,9 @@ class Usuario(AbstractUser):
         return self.username
     
 
-# ==========================================================
-# 1︝⃣  AÇÃO (dados principais do ativo)
-# ==========================================================
 class Acao(models.Model):
-    abreviacao = models.CharField(max_length=10, unique=True)  # Ex: PETR4
-    nome = models.CharField(max_length=100)  # Ex: Petrobras PN
+    abreviacao = models.CharField(max_length=10, unique=True)  
+    nome = models.CharField(max_length=100)  
     nome_completo = models.CharField(max_length=200, blank=True, null=True)
     moeda = models.CharField(max_length=10, default="BRL")
 
@@ -47,9 +45,6 @@ class Acao(models.Model):
         return f"{self.abreviacao} - {self.nome}"
 
 
-# ==========================================================
-# 2︝⃣  HISTÓRICO DE PREÇOS (dados diários, semanais, etc.)
-# ==========================================================
 class AcaoHistorico(models.Model):
     class PeriodoChoices(models.TextChoices):
         D1 = "1d", "1 Dia"
@@ -112,3 +107,16 @@ class Monitoramento(models.Model):
     adicionado_em = models.DateTimeField(auto_now_add=True)
     preco_alvo = models.FloatField()
     direcao = models.CharField(max_length=20, choices=DIRECAO_CHOICES)
+
+
+class Worker(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    hostname = models.CharField(max_length=100)
+    pid = models.IntegerField()
+    is_leader = models.BooleanField(default=False)
+    uptime_segundos = models.BigIntegerField(default=0)
+    last_heartbeat = models.DateTimeField(auto_now=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.hostname} ({self.pid})"

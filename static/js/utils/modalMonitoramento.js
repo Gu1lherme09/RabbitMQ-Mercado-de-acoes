@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('formMonitoramento');
   const cancelar = document.getElementById('btnCancelar');
 
+
   // Abrir modal
   document.querySelectorAll('.btn-add').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -25,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Enviar via AJAX 
   form.addEventListener('submit', async (e) => {
-    e.preventDefault(); // ainda evita o reload automático
+    e.preventDefault();
 
     const formData = new FormData(form);
     const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -33,29 +34,28 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const response = await fetch(form.action, {
         method: 'POST',
-        headers: {
-          'X-CSRFToken': csrfToken
-        },
+        headers: { 'X-CSRFToken': csrfToken },
         body: formData
       });
 
       if (response.ok) {
-        alert('✅ Monitoramento salvo com sucesso!');
+        // ✅ Guarda a mensagem pra usar DEPOIS do reload
+        sessionStorage.setItem('monitoramento_sucesso_msg', '✅ Monitoramento salvo com sucesso!');
+        sessionStorage.setItem('monitoramento_sucesso_tipo', 'success');
+
         modal.classList.add('hidden');
         form.reset();
 
-        // 🔹 recarrega a página para mostrar a nova ação
+        // 🔹 Só recarrega aqui
         window.location.reload();
-      } else {
-        alert('⚠️ Erro ao salvar o monitoramento.');
+      }
+      else {
+        // Aqui sim pode mostrar direto (sem reload)
+        showToast('⚠️ Erro ao salvar o monitoramento.', 'error');
       }
     } catch (err) {
       console.error(err);
-      alert('❌ Erro na requisição.');
+      showToast('❌ Erro na requisição.', 'error');
     }
   });
 });
-
-
-
-

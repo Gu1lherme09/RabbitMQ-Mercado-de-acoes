@@ -94,7 +94,7 @@
       <input type="number" name="preco_alvo" step="0.01" required>
 
       <label>Direção:</label>
-      <select name="direcao" required>
+      <select name="direcao" id="direcaoSelect" data-fancy required>
         <option value="acima">Acima</option>
         <option value="acima_ou_igual">Acima ou Igual</option>
         <option value="abaixo">Abaixo</option>
@@ -117,7 +117,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const inputBusca = document.getElementById("buscaAcao");
   const linhas = document.querySelectorAll("#tabelaAcoes tr");
 
+  const msg = sessionStorage.getItem('monitoramento_sucesso_msg');
+  console.log('MSG RELOAD:', msg);
+  if (msg && typeof showToast === 'function') {
+    const tipo = sessionStorage.getItem('monitoramento_sucesso_tipo') || 'success';
+    showToast(msg, tipo);
 
+    sessionStorage.removeItem('monitoramento_sucesso_msg');
+    sessionStorage.removeItem('monitoramento_sucesso_tipo');
+  }
+  
   inputBusca.addEventListener("input", () => {
     const termo = inputBusca.value.toLowerCase().trim();
     linhas.forEach(linha => {
@@ -133,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnAdd.addEventListener("click", async () => {
     const ticker = inputTicker.value.trim().toUpperCase();
-    if (!ticker) return alert("Digite o ticker da ação (ex: PETR4, MGLU3, VALE3...).");
+    if (!ticker) return showToast("Digite o ticker da ação (ex: PETR4, MGLU3, VALE3...)", "info");
 
     btnAdd.disabled = true;
     btnAdd.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Adicionando...";
@@ -153,20 +162,19 @@ document.addEventListener("DOMContentLoaded", () => {
       btnAdd.innerHTML = "<i class='bx bx-plus'></i> Adicionar";
 
       if (data.ok) {
-        alert("✅ " + data.msg);
-        // Abre o modal de monitoramento
+        showToast("✅ " + data.msg, "success");
         document.getElementById("modal_acao_nome").textContent = data.nome;
         document.getElementById("modal_acao_simbolo").textContent = data.ticker;
         document.getElementById("modal_acao_id").value = data.acao_id;
         document.getElementById("monitoramentoModal").classList.remove("hidden");
       } else {
-        alert("⚠️ " + (data.erro || "Erro ao adicionar ação."));
+         showToast("⚠️ " + (data.erro || "Erro ao adicionar ação."), "error");
       }
     } catch (err) {
       console.error(err);
       btnAdd.disabled = false;
       btnAdd.innerHTML = "<i class='bx bx-plus'></i> Adicionar";
-      alert("❌ Erro de conexão com o servidor.");
+      showToast("❌ Erro de conexão com o servidor.", "error");
     }
   });
 });

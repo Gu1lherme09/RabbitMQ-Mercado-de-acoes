@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Adicionar pasta pai ao path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
@@ -11,7 +10,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Importar m�dulos
 from config.rabbitmq_config import RabbitMQConfig
 import json
 import pika
@@ -92,11 +90,9 @@ def test_publish_consume():
         )
         print(f"   ✓ Publicado: {test_message}")
         
-        # IMPORTANTE: Aguardar um pouco para mensagem ser roteada
         import time
         time.sleep(0.5)
         
-        # Consumir (USANDO O MESMO CANAL!)
         print("\n📥 Consumindo mensagem...")
         method, properties, body = channel.basic_get(
             queue='fila_cotacoes',
@@ -137,12 +133,10 @@ def main():
     print("TESTE COMPLETO DA CONFIGURA��O RABBITMQ")
     print("??"*30 + "\n")
     
-    # Executar testes
     test1 = test_connection()
     test2 = test_setup()
     test3 = test_publish_consume()
     
-    # Resultado final
     print("\n" + "="*60)
     print("?? RESULTADO FINAL")
     print("="*60)

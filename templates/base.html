@@ -5,9 +5,13 @@
   <meta charset="UTF-8">
   <title>{% block title %}BolsaView{% endblock %}</title>
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'css/utils/toast.css' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
-  <link rel="stylesheet" href="{% static 'css/modal.css' %}">
+  <link rel="stylesheet" href="{% static 'css/modal.css' %}">  
+  <link rel="stylesheet" href="{% static 'css/utils/fancySelect.css' %}">
 </head>
+<div id="toast-container"></div>
 <body>
 
   {% include 'partials/nav-bar.html' %}
@@ -17,5 +21,8 @@
   </main>
 
   <script src="{% static 'js/home/usuario.js' %}"></script>
+  <script src="{% static 'js/utils/toast.js' %}"></script>
+  <script src="{% static 'js/utils/fancySelect.js' %}"></script>
 </body>
 </html>
+

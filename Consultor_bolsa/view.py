@@ -20,7 +20,6 @@ def home(request):
 @login_required(login_url='login')
 def consultar_acoes(request):
     acoes = Acao.objects.all()
-     # pega os IDs das ações já monitoradas por este usuário
     monitoradas_ids = Monitoramento.objects.filter(usuario=request.user).values_list('acao_id', flat=True)
 
     ctx = {
@@ -81,7 +80,6 @@ def historico_ou_basico(request, ticker):
     periodo = request.GET.get("periodo", "1mo").lower()
     hoje = date.today()
 
-    # 🔹 Define o intervalo com base no período
     if periodo == "1w":
         data_minima = hoje - timedelta(days=7)
     elif periodo == "1mo":
@@ -93,14 +91,13 @@ def historico_ou_basico(request, ticker):
     elif periodo == "1y":
         data_minima = hoje - timedelta(days=365)
     else:
-        data_minima = None  # caso inesperado
+        data_minima = None  
 
     try:
         acao = Acao.objects.get(abreviacao__iexact=ticker)
     except Acao.DoesNotExist:
         return JsonResponse({"ok": False, "erro": f"Ação '{ticker}' não encontrada."}, status=404)
 
-    # 🔹 Busca histórico dentro do intervalo (se definido)
     qs = AcaoHistorico.objects.filter(acao=acao)
     if data_minima:
         qs = qs.filter(data__gte=data_minima)
@@ -121,7 +118,6 @@ def historico_ou_basico(request, ticker):
         ]
         origem = "historico"
     else:
-        # 🔸 Se não há histórico, retorna o dado básico atual
         dados = [{
             "data": acao.atualizado_em.strftime("%d/%m/%Y") if getattr(acao, "atualizado_em", None) else "",
             "fechamento": float(acao.valor_atual or 0),

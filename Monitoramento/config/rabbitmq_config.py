@@ -52,9 +52,9 @@ class RabbitMQConfig:
             virtual_host=self.vhost,
             credentials=credentials,
             ssl_options=ssl_options, 
-            heartbeat=600,          # 10 min
-            blocked_connection_timeout=300,  # 5 min
-            socket_timeout=10   #10s
+            heartbeat=600,          
+            blocked_connection_timeout=300, 
+            socket_timeout=10  
         )    
         
         
@@ -96,9 +96,9 @@ class RabbitMQConfig:
             queue='fila_cotacoes', 
             durable=True, 
             arguments={
-                'x-message-ttl': 60000,   # 60 segundos
-                'x-max-length': 1000       # M�ximo 1000 mensagens
-             } # Mensagens expiram ap�s 60 segundos
+                'x-message-ttl': 60000, 
+                'x-max-length': 1000     
+             } 
         )
         
         print("\n fila_cotacoes criada com sucesso.")
@@ -108,7 +108,7 @@ class RabbitMQConfig:
             durable=True, 
             arguments={
                 'x-message-ttl': 30000
-             } # Mensagens expiram ap�s 30 segundos
+             } 
         )
         
         print("\n fila_alertas criada com sucesso.")
@@ -125,8 +125,8 @@ class RabbitMQConfig:
             queue='fila_heartbeat',
             durable=False, 
             arguments={
-                'x-message-ttl': 20000,   # 20 segundos
-                'x-max-length': 100         # M�ximo 100 mensagens
+                'x-message-ttl': 20000, 
+                'x-max-length': 100         
             }
         )   
         

@@ -115,6 +115,7 @@
 #modal_acao_simbolo {
   color: #6b7280;
 }
+
 /* Garante que os campos ocupem toda a largura */
 .modal-content input[type="number"],
 .modal-content select {
@@ -162,4 +163,26 @@
   margin-bottom: 1rem;
   font-weight: 500;
   color: #1f2937;
+}
+
+/* Aumenta um pouco a largura do modal para caber melhor o texto do select */
+.modal-content {
+  max-width: 460px; /* antes era 400px */
+}
+
+/* Garante que o dropdown use toda a largura disponível dentro do modal */
+.modal-content .custom-dropdown {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Mais espaço interno no botão do select dentro do modal */
+.modal-content .custom-dropdown-toggle {
+  padding: 0.55rem 1.6rem 0.55rem 0.9rem;
+  /*        top   right   bottom  left  */
+}
+
+/* Garante que o texto fique em uma linha só dentro do botão */
+.modal-content .custom-dropdown-label {
+  white-space: nowrap;
 }

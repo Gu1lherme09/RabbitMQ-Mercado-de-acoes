@@ -17,6 +17,7 @@ venv/
 poetry.lock
 Pipfile
 Pipfile.lock
+*.sqlite3
 
 # ==========================================
 # 🧮 ARQUIVOS TEMPORÁRIOS / BACKUPS
