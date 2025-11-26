@@ -112,3 +112,73 @@ class Monitoramento(models.Model):
     adicionado_em = models.DateTimeField(auto_now_add=True)
     preco_alvo = models.FloatField()
     direcao = models.CharField(max_length=20, choices=DIRECAO_CHOICES)
+    
+class Alerta(models.Model):
+    TIPO_CHOICES =[
+        ('preco', 'Preço'), 
+        ('percentual', 'Percentual'), 
+        ('volume', 'Volume'),
+        ('market_cap', 'Market Cap'),
+    ]
+    
+    OPERADO_CHOICES = [
+        ('>', 'Maior que'),
+        ('>=', 'Maior ou Igual a'),
+        ('<', 'Menor que'),
+        ('<=', 'Menor ou Igual a'),
+        ('=', 'Igual a'),
+    ]
+    
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    acao = models.ForeignKey(Acao, on_delete=models.CASCADE)
+    tipo_alerta = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    valor_referencia = models.FloatField()
+    ativo = models.BooleanField(default=True)
+    disparado = models.BooleanField(default=False)
+    disparado_em = models.DateTimeField(blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Alerta"
+        verbose_name_plural = "Alertas"
+        indexes = [
+            models.Index(fields=["usuario", "acao"]),
+            models.Index(fields=["ativo", "disparado"])
+        ]
+        
+    def __str__(self):
+        return f"{self.usuario.email} - {self.acao.abreviacao} {self.operador} {self.valor_referencia}"
+    
+    
+class NotificacaoUsuario(models.Model):
+    TIPO_CHOICES =[
+        ('alerta', 'Alerta'), 
+        ('sistema', 'Sistema'), 
+        ('dividendo', 'Dividendo'),
+        ('informativo', 'Informativo'),
+    ]
+    
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    alerta = models.ForeignKey(Alerta, on_delete=models.SET_NULL, null=True, blank=True)
+    titulo = models.CharField(max_length=200)
+    mensagem = models.TextField()
+    tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
+    lida = models.BooleanField(default=False)
+    enviada_telegram = models.BooleanField(default=False)  
+    criado_em = models.DateTimeField(auto_now_add=True)    
+    
+    class Meta:
+        verbose_name = "Notificação"
+        verbose_name_plural = "Notificações"
+        ordering = ["-criado_em"]
+        indexes = [
+            models.Index(fields=["usuario", "lida"]),
+            models.Index(fields=["enviada_telegram"]),
+        ]
+        
+    def __str__(self):
+        return f"{self.usuario.email} - {self.titulo}"
+        
+        
+        
+    

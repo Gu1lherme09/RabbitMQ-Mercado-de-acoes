@@ -32,3 +32,19 @@ def registro_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+def perfil_view(request):
+    """Tela de configuração do perfil do usuário"""
+    if request.method == 'POST':
+        chat_id = request.POST.get('chat_id', '').strip()
+        
+        if chat_id:
+            request.user.chat_id = chat_id
+            request.user.save()
+            messages.success(request, 'Chat ID configurado com sucesso! Você receberá alertas no Telegram.')
+        else:
+            messages.error(request, 'Por favor, informe um Chat ID válido.')
+        
+        return redirect('perfil')
+    
+    return render(request, 'perfil/perfil.html')

@@ -86,7 +86,7 @@ class RabbitMQConfig:
         
         channel.exchange_declare(
             exchange='election', 
-            exchange_type='topic', 
+            exchange_type='fanout', 
             durable=True
         )
         
@@ -121,16 +121,6 @@ class RabbitMQConfig:
         print("\n fila_notificacoes criada com sucesso.")
         
         
-        channel.queue_declare(
-            queue='fila_heartbeat',
-            durable=False, 
-            arguments={
-                'x-message-ttl': 20000,   # 20 segundos
-                'x-max-length': 100         # M�ximo 100 mensagens
-            }
-        )   
-        
-        print("\n fila_heartbeat criada com sucesso.")
                 
         print("\nConfigurando bindings ...\n")
         channel.queue_bind(
@@ -151,15 +141,7 @@ class RabbitMQConfig:
           
         print(" stock_topic ? fila_alertas (routing: alerta.#)")
         print("\n Binding para fila_alertas criado com sucesso.")
-        
-        channel.queue_bind(
-            exchange='election', 
-            queue='fila_heartbeat'
-        )
-        
-        print(" election ? fila_heartbeat")
-        print("\n Binding para fila_heartbeat criado com sucesso.")
-                
+  
         print("\nConfigura��o do RabbitMQ conclu�da com sucesso.")
         
         
