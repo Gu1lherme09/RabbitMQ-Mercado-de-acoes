@@ -123,6 +123,20 @@ def get_acao(db, abreviacao):
         result = db.execute_query(query, (abreviacao,))
         return result[0] if result else None
     
+def log_eleicao(db, worker_vencedor_id, worker_anterior_id, tempo_atividade, tipo_evento, detalhes = None):
+    query = """
+        INSERT INTO logeleicao 
+        (worker_vencedor_id, worker_anterior_id, tempo_atividade, tipo_evento, detalhes, criado_em)
+        VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+        RETURNING id;
+        """
+        
+    result = db.execute_query(query, 
+        (worker_vencedor_id, worker_anterior_id, tempo_atividade, tipo_evento, detalhes))
+    
+    return result[0]['id'] if result else None
+        
+    
     
     
             

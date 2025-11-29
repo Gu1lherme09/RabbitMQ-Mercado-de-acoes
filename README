@@ -1,14 +1,131 @@
-Rodar os seguintes comandos no terminal para configurar o ambiente:
-pip install django
-python.exe -m pip install --upgrade pip
+# 📊 BolsaView - Sistema de Monitoramento de Ações
 
-pip install brapi
-pip install pyTelegramBotApi
-pip install pytelegrambotapi --upgrade
-python manage.py makemigrations
+Sistema de monitoramento em tempo real de ações da B3 com alertas via Telegram.
+
+**Stack:** Django + RabbitMQ + PostgreSQL + Telegram Bot
+
+---
+
+## ⚙️ **CONFIGURAÇÃO INICIAL (Fazer apenas 1 vez)**
+
+### 1. **Instalar Dependências**
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+###Configurar .env 
+# API de acoes Brapi
+BRAPI_TOKEN=token_brapi
+
+# RabbitMQ Cloud AMQP
+CLOUDAMQP_URL=url_cloudamqp
+
+# RabbitMQ Local (backup)
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
+RABBITMQ_USER=user
+RABBITMQ_PASS=password
+RABBITMQ_VHOST=/
+
+# PostgreSQL
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=monitoramento_acoes
+DB_USER=postgres
+DB_PASS=admin
+
+#TELEGRAM_BOT
+TELEGRAM_BOT_TOKEN=token_bot_telegram
+
+
+# API Brapi
+BRAPI_URL=https://brapi.dev/api/quote
+
+
+### 2. **Configurar Banco de Dados**
+```powershell
+# Certifique-se que PostgreSQL está rodando
 python manage.py migrate
-python .\manage.py runserver
-python .\manage.py makemigrations
+python manage.py createsuperuser
+```
 
-## erros cmd 
-Se caso der erro para realizar a instala��o do psycopg[binary]>=3.2.1, � so rodar no cmd: pip install "psycopg[binary]"
+### 3. **Popular Ações da B3**
+```powershell
+python popular_banco.py
+```
+✅ Cadastra 100 ações automaticamente
+
+---
+
+## 🚀 **RODAR O PROJETO (Abra 4 terminais)**
+
+### **Terminal 1: Aplicação Web**
+```powershell
+python manage.py runserver
+```
+➡️ Acesse: **http://localhost:8000**
+
+### **Terminal 2: Worker Principal**
+```powershell
+cd monitoramento
+python worker_main.py worker_1
+```
+
+### **Terminal 3: Worker Backup**
+```powershell
+cd monitoramento
+python worker_main.py worker_2
+```
+
+### **Terminal 4: Notificações Telegram**
+```powershell
+cd monitoramento\services
+python telegram_worker.py
+```
+
+---
+
+## 📱 **CONFIGURAR TELEGRAM (Opcional)**
+
+### **1. Obter Chat ID**
+```powershell
+cd monitoramento\services
+python telegram_bot_setup.py
+```
+
+### **2. No Telegram**
+- Procure pelo seu bot
+- Envie `/start`
+- Copie o Chat ID recebido
+
+### **3. Na Aplicação**
+- Acesse: http://localhost:8000/perfil
+- Cole o Chat ID
+- Salve
+
+✅ Pronto! Você receberá alertas no Telegram
+
+---
+
+## ❗ **PROBLEMAS COMUNS**
+
+### **Ações não aparecem na interface**
+```powershell
+python popular_banco.py
+```
+
+### **Erro ao instalar dependências**
+```powershell
+pip install "psycopg[binary]"
+```
+
+### **Workers não conectam**
+- Verifique URL do CloudAMQP no arquivo `.env`
+- Certifique-se que PostgreSQL está rodando
+
+---
+
+## 📝 **LICENÇA**
+
+MIT License

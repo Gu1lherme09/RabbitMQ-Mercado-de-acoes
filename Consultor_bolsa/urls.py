@@ -35,6 +35,10 @@ urlpatterns = [
     path("banco/acoes/basicas/", view.dados_basicos_acoes, name="api_dados_basicos_acoes"),
     path("banco/historico_ou_basico/<str:ticker>/", view.historico_ou_basico, name="api_historico_ou_basico"),
     # --------------------------------------------------------------
+    
+    # ------------------------- Gráfico ----------------------------
+    path('perfil/', tc.perfil_view, name='perfil'),
+    # --------------------------------------------------------------
 ]
 
 if settings.DEBUG:
